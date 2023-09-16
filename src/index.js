@@ -44,11 +44,6 @@ function renderDogName({ name }) {
     dogBarContainer.appendChild(dogName)
 }
 function renderDogInfo({ name, isGoodDog, image }) {
-    /*
-        <img src="dog_image_url" />
-        <h2>Mr. Bonkers</h2>
-        <button>Good Dog!</button>
-    */
     //grab parent element
     const dogInfoContainer = document.querySelector('#dog-info')
     //create elements 
@@ -74,6 +69,21 @@ function getDogs() {
             loopThroughDogName()
             spanAddEventListener()
         })
+}
+
+function updateDogStatus({status, id}){
+    fetch(`http://localhost:3000/pups/${id}`, {
+        method: 'PATCH',
+        headers:{
+            'Content-Type':'application/json',
+            'Accept': 'application/json'
+        },
+        body:JSON.stringify({
+            isGoodDog: status
+        })
+        .then(res => res.json)
+        .then(dog => console.log('dog in updateDogStatus', dog))
+    })
 }
 
 function init() {
