@@ -19,8 +19,22 @@ function clearDOM() {
         btn.remove()
     }
 }
-
+function toggle(text){
+    const btn = document.querySelector('#good-dog-filter')
+    if(text === 'Filter good dogs: OFF'){
+        btn.textContent = 'Filter good dogs: ON'
+    }else{
+        btn.textContent = 'Filter good dogs: OFF'
+    }
+}
 /***Events***/
+
+function filterButton(){
+    document.querySelector('#good-dog-filter').addEventListener('click', (e)=>{
+        let btnText = e.target.textContent
+        toggle(btnText)
+    })
+}
 function spanAddEventListener() {
     const dogBarContainer = document.getElementById('dog-bar')
     const dogSpanList = dogBarContainer.querySelectorAll('span')
@@ -118,4 +132,5 @@ function updateDogStatus({ status, id }) {
 
 function init() {
     getDogs()
+    filterButton()
 }
