@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', init)
-//global variables
+/***global variables***/
 let dogsArray = []
 
-//helper functions
+/***helper functions***/
 function loopThroughDogName() {
     dogsArray.forEach(dog => renderDogName(dog))
 }
@@ -19,10 +19,12 @@ function clearDOM() {
         btn.remove()
     }
 }
+
+/***Events***/
 function spanAddEventListener() {
     const dogBarContainer = document.getElementById('dog-bar')
     const dogSpanList = dogBarContainer.querySelectorAll('span')
-    //add an event listener for on each dog's name
+    //add an event listener on each dog's name span
     dogSpanList.forEach(spanElement => {
         spanElement.addEventListener('click', () => {
             //find the dogObj in the dogsArray variable
@@ -32,7 +34,30 @@ function spanAddEventListener() {
         })
     })
 }
-//render to DOM
+function dogButtonEventListener(btn, dogObj) {
+    btn.addEventListener('click', () => {
+        if (btn.textContent === 'Good Dog!') {
+            let dog = {
+                id: dogObj.id,
+                status: !dogObj.isGoodDog
+            }
+            //update button text in the DOM
+            btn.textContent = 'Bad Dog!'
+            //update isGoodDog status to the server
+            updateDogStatus(dog)
+        } else {
+            let dog = {
+                id: dogObj.id,
+                status: dogObj.isGoodDog
+            }
+            //update button text in the DOM
+            btn.textContent = 'Good Dog!'
+            //update isGoodDog status to the server
+            updateDogStatus(dog)
+        }
+    })
+}
+/***render to DOM***/
 function renderDogName({ name }) {
     //get parent element
     const dogBarContainer = document.getElementById('dog-bar')
@@ -43,7 +68,8 @@ function renderDogName({ name }) {
     //append to DOM
     dogBarContainer.appendChild(dogName)
 }
-function renderDogInfo({ name, isGoodDog, image }) {
+function renderDogInfo(dogObj) {
+    const { name, isGoodDog, image } = dogObj
     //grab parent element
     const dogInfoContainer = document.querySelector('#dog-info')
     //create elements 
@@ -59,8 +85,10 @@ function renderDogInfo({ name, isGoodDog, image }) {
     dogInfoContainer.appendChild(dogImg)
     dogInfoContainer.appendChild(dogName)
     dogInfoContainer.appendChild(btn)
+    //call an event to the dog button
+    dogButtonEventListener(btn, dogObj)
 }
-//fetch requests
+/***fetch requests***/
 function getDogs() {
     fetch('http://localhost:3000/pups')
         .then(res => res.json())
@@ -71,19 +99,21 @@ function getDogs() {
         })
 }
 
-function updateDogStatus({status, id}){
+function updateDogStatus({ status, id }) {
     fetch(`http://localhost:3000/pups/${id}`, {
         method: 'PATCH',
-        headers:{
-            'Content-Type':'application/json',
+        headers: {
+            'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
-        body:JSON.stringify({
+        body: JSON.stringify({
             isGoodDog: status
         })
-        .then(res => res.json)
-        .then(dog => console.log('dog in updateDogStatus', dog))
     })
+        .then(res => res.json())
+        .then(dog => {
+
+        })
 }
 
 function init() {
