@@ -6,68 +6,81 @@ let dogsArray = []
 function loopThroughDogName() {
     dogsArray.forEach(dog => renderDogName(dog))
 }
-function clearDOM() {
-    const dogBarContainer = document.getElementById('dog-info')
-    const img = dogBarContainer.querySelector('img')
-    const dogName = dogBarContainer.querySelector('h2')
-    const btn = dogBarContainer.querySelector('button')
-    if (!dogBarContainer.children.length) {
-        return
-    } else {
-        img.remove()
-        dogName.remove()
-        btn.remove()
+function clearDOM(parentContainer) {
+    if(parentContainer.children.length){
+        Array.from(parentContainer.children).forEach(element => element.remove())
     }
 }
-function toggle(text){
+function toggle(text) {
     const btn = document.querySelector('#good-dog-filter')
-    if(text === 'Filter good dogs: OFF'){
-        btn.textContent = 'Filter good dogs: ON'
-    }else{
+    const nameContainer = document.querySelector('#dog-bar')
+    if (text === 'Filter good dogs: OFF') {
+       btn.textContent = 'Filter good dogs: ON'
+       return btn
+    } else {
         btn.textContent = 'Filter good dogs: OFF'
+        return btn
     }
 }
 /***Events***/
 
-function filterButton(){
-    document.querySelector('#good-dog-filter').addEventListener('click', (e)=>{
+function filterButton() {
+    document.querySelector('#good-dog-filter').addEventListener('click', (e) => {
+        const dogNameContainer = document.querySelector('#dog-bar')
+        const spanNameList = dogNameContainer.querySelectorAll('span')
         let btnText = e.target.textContent
-        toggle(btnText)
+        const btnNewText = toggle(btnText)
+        if(btnNewText.textContent === 'Filter good dogs: ON'){
+            const filterBadDogs = dogsArray.filter(dog => !dog.isGoodDog)
+            filterBadDogs.forEach(dog =>{
+                spanNameList.forEach(element => {
+                    if(element.textContent === dog.name){
+                        element.remove()
+                    }
+                })
+                
+            })
+        }
+
+        if(btnNewText.textContent === 'Filter good dogs: OFF' ){
+            //remove the fitlered good dog names in the dog-bar element
+            spanNameList.forEach(element => element.remove())
+            //add all the dog name 
+            dogsArray.forEach(dog => {
+                renderDogName(dog)
+            })
+            
+        }
     })
 }
 function spanAddEventListener() {
     const dogBarContainer = document.getElementById('dog-bar')
     const dogSpanList = dogBarContainer.querySelectorAll('span')
+    const dogInfoContainer = document.querySelector('#dog-info')
     //add an event listener on each dog's name span
     dogSpanList.forEach(spanElement => {
         spanElement.addEventListener('click', () => {
             //find the dogObj in the dogsArray variable
             const dogObj = dogsArray.find(dog => dog.name === spanElement.textContent)
-            clearDOM()
+            clearDOM(dogInfoContainer)
             renderDogInfo(dogObj)
         })
     })
 }
 function dogButtonEventListener(btn, dogObj) {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
         if (btn.textContent === 'Good Dog!') {
-            let dog = {
-                id: dogObj.id,
-                status: !dogObj.isGoodDog
-            }
             //update button text in the DOM
             btn.textContent = 'Bad Dog!'
+            dogObj.isGoodDog = false
             //update isGoodDog status to the server
-            updateDogStatus(dog)
+            updateDogStatus(dogObj)
         } else {
-            let dog = {
-                id: dogObj.id,
-                status: dogObj.isGoodDog
-            }
             //update button text in the DOM
             btn.textContent = 'Good Dog!'
+            dogObj.isGoodDog = true
             //update isGoodDog status to the server
-            updateDogStatus(dog)
+            updateDogStatus(dogObj)
         }
     })
 }
@@ -81,6 +94,7 @@ function renderDogName({ name }) {
     dogName.textContent = name
     //append to DOM
     dogBarContainer.appendChild(dogName)
+    spanAddEventListener()
 }
 function renderDogInfo(dogObj) {
     const { name, isGoodDog, image } = dogObj
@@ -109,11 +123,10 @@ function getDogs() {
         .then(dogs => {
             dogsArray = dogs
             loopThroughDogName()
-            spanAddEventListener()
         })
 }
 
-function updateDogStatus({ status, id }) {
+function updateDogStatus({ isGoodDog, id }) {
     fetch(`http://localhost:3000/pups/${id}`, {
         method: 'PATCH',
         headers: {
@@ -121,12 +134,21 @@ function updateDogStatus({ status, id }) {
             'Accept': 'application/json'
         },
         body: JSON.stringify({
-            isGoodDog: status
+            isGoodDog: isGoodDog
         })
     })
         .then(res => res.json())
-        .then(dog => {
-
+        .then(dogObj => {
+            console.log('dogObj in server', dogObj)
+            //update the dog's status in the dogsArray array
+            const newDogsArray = dogsArray.map(dog => {
+                if(dog.id === id){
+                    return {...dog, isGoodDog: dogObj.isGoodDog}
+                }
+                return dog
+            })
+            //dogsArray = newDogsArray
+            dogsArray = newDogsArray
         })
 }
 
