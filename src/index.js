@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', init)
+/*
+
+*/
 /***global variables***/
 let dogsArray = []
 
@@ -7,16 +10,17 @@ function loopThroughDogName() {
     dogsArray.forEach(dog => renderDogName(dog))
 }
 function clearDOM(parentContainer) {
-    if(parentContainer.children.length){
+    if (parentContainer.children.length) {
         Array.from(parentContainer.children).forEach(element => element.remove())
     }
 }
+
 function toggle(text) {
     const btn = document.querySelector('#good-dog-filter')
     const nameContainer = document.querySelector('#dog-bar')
     if (text === 'Filter good dogs: OFF') {
-       btn.textContent = 'Filter good dogs: ON'
-       return btn
+        btn.textContent = 'Filter good dogs: ON'
+        return btn
     } else {
         btn.textContent = 'Filter good dogs: OFF'
         return btn
@@ -27,29 +31,25 @@ function toggle(text) {
 function filterButton() {
     document.querySelector('#good-dog-filter').addEventListener('click', (e) => {
         const dogNameContainer = document.querySelector('#dog-bar')
+        const dogInfoContainer = document.querySelector('#dog-info')
         const spanNameList = dogNameContainer.querySelectorAll('span')
         let btnText = e.target.textContent
         const btnNewText = toggle(btnText)
-        if(btnNewText.textContent === 'Filter good dogs: ON'){
-            const filterBadDogs = dogsArray.filter(dog => !dog.isGoodDog)
-            filterBadDogs.forEach(dog =>{
-                spanNameList.forEach(element => {
-                    if(element.textContent === dog.name){
-                        element.remove()
-                    }
-                })
-                
-            })
+
+        if (btnNewText.textContent === 'Filter good dogs: ON') {
+            //filter through good dogs
+            const filterGoodDogs = dogsArray.filter(dog => dog.isGoodDog)
+            clearDOM(dogNameContainer)
+            //displaye only the good dogs
+            filterGoodDogs.forEach(dog => renderDogName(dog))
+            // check if the dog's name is already present in the dog bar
         }
 
-        if(btnNewText.textContent === 'Filter good dogs: OFF' ){
-            //remove the fitlered good dog names in the dog-bar element
-            spanNameList.forEach(element => element.remove())
-            //add all the dog name 
+        if (btnNewText.textContent === 'Filter good dogs: OFF') {
+            clearDOM(dogNameContainer)
             dogsArray.forEach(dog => {
                 renderDogName(dog)
             })
-            
         }
     })
 }
@@ -68,19 +68,47 @@ function spanAddEventListener() {
     })
 }
 function dogButtonEventListener(btn, dogObj) {
+    const dogBarContainer = document.querySelector('#dog-bar')
+    const dogInfoContainer = document.querySelector('#dog-info')
+    //spanNameList variable is for the if statement in the else block 
+    //here the spanNameList is grabbing all the 10 span elements
+    const spanNameList = dogBarContainer.querySelectorAll('span')
     btn.addEventListener('click', (e) => {
         if (btn.textContent === 'Good Dog!') {
-            //update button text in the DOM
-            btn.textContent = 'Bad Dog!'
-            dogObj.isGoodDog = false
-            //update isGoodDog status to the server
-            updateDogStatus(dogObj)
+            // Update button text in the DOM
+            btn.textContent = 'Bad Dog!';
+            dogObj.isGoodDog = false;
+            // Update isGoodDog status to the server
+            updateDogStatus(dogObj);
+
+            // Check if the filter button is turned on
+            if (document.querySelector('#good-dog-filter').textContent === 'Filter good dogs: ON') {
+                //this spanNameList variable is to grab only the span elements that are currently displayed in the dog-bar
+                //here the spanName list is just grabbing the dog's with a 'good dog' button
+                const spanNameList = dogBarContainer.querySelectorAll('span')
+                const dogNameElement = Array.from(spanNameList).find(element => element.textContent === dogObj.name);
+                //this should remove the span with the name of the dog that was toggle to bad dog when the filter button is on
+                //however, its not removing the span element
+                dogNameElement.remove()
+                clearDOM(dogInfoContainer)
+            }
         } else {
-            //update button text in the DOM
-            btn.textContent = 'Good Dog!'
-            dogObj.isGoodDog = true
-            //update isGoodDog status to the server
-            updateDogStatus(dogObj)
+            // Update button text in the DOM
+            btn.textContent = 'Good Dog!';
+            dogObj.isGoodDog = true;
+            // Update isGoodDog status to the server
+            updateDogStatus(dogObj);
+
+            // Check if the filter button is turned on
+            if (document.querySelector('#good-dog-filter').textContent === 'Filter good dogs: ON') {
+                const dogNameElement = Array.from(spanNameList).find(element => element.textContent === dogObj.name);
+                if (dogNameElement) {
+                    // Add the dog's name to the dog bar
+                    renderDogName(dogObj);
+                }
+            }
+
+
         }
     })
 }
@@ -142,8 +170,8 @@ function updateDogStatus({ isGoodDog, id }) {
             console.log('dogObj in server', dogObj)
             //update the dog's status in the dogsArray array
             const newDogsArray = dogsArray.map(dog => {
-                if(dog.id === id){
-                    return {...dog, isGoodDog: dogObj.isGoodDog}
+                if (dog.id === id) {
+                    return { ...dog, isGoodDog: dogObj.isGoodDog }
                 }
                 return dog
             })
